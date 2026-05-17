@@ -27,7 +27,7 @@ describe("buildYearCalendar", () => {
     expect(months[11].label).toBe("December");
   });
 
-  it("does not accrue on vacation days and subtracts vacation hours", () => {
+  it("accrues vacation time for vacation days and subtracts used vacation hours", () => {
     const days = flattenMonths(
       buildYearCalendar(2026, settings, [
         {
@@ -44,8 +44,32 @@ describe("buildYearCalendar", () => {
     );
 
     const jan2 = days.find((day) => day.date === "2026-01-02");
-    expect(jan2?.dailyAccruedVacationHours).toBe(0);
-    expect(jan2?.runningVacationBalanceHours).toBe(2.5);
+    expect(jan2?.effectiveWorkHours).toBe(7.5);
+    expect(jan2?.dailyAccruedVacationHours).toBe(0.75);
+    expect(jan2?.accruedVacationHoursToDate).toBe(0.75);
+    expect(jan2?.runningVacationBalanceHours).toBe(3.25);
+  });
+
+  it("keeps vacation-day accrual based on working hours even when another accruing flag is present", () => {
+    const days = flattenMonths(
+      buildYearCalendar(2026, settings, [
+        {
+          date: "2026-01-02",
+          workHours: 7.5,
+          vacationDay: true,
+          vacationHours: 7.5,
+          personalDay: true,
+          publicHoliday: false,
+          unpaidDay: false,
+          unpaidHours: 0
+        }
+      ])
+    );
+
+    const jan2 = days.find((day) => day.date === "2026-01-02");
+    expect(jan2?.dailyAccruedVacationHours).toBe(0.75);
+    expect(jan2?.accruedVacationHoursToDate).toBe(0.75);
+    expect(jan2?.runningVacationBalanceHours).toBe(3.25);
   });
 
   it("accrues for public holidays as if the user worked a standard day", () => {
