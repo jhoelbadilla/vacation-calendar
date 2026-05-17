@@ -67,7 +67,7 @@ export function SettingsPanel({ profileId, settings }: { profileId: string; sett
           <Input
             type="number"
             min="0"
-            step="0.25"
+            step="0.01"
             value={form.currentVacationHours}
             onChange={(event) => update("currentVacationHours", event.currentTarget.value)}
           />
