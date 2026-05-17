@@ -28,6 +28,7 @@ A React + Express + PostgreSQL vacation accrual simulator.
 
    ```bash
    docker network inspect torrentnet || docker network create torrentnet
+   npm run build --workspace api
    docker compose up -d --build postgres api
    docker compose exec api npm run migrate
    ```

@@ -58,7 +58,7 @@ export function AuthScreen() {
           {mode === "register" ? (
             <>
               <Field label="Username">
-                <Input name="username" autoComplete="username" pattern="[A-Za-z0-9_-]+" minLength={3} maxLength={32} required />
+                <Input name="username" autoComplete="username" pattern="[A-Za-z0-9_\\-]+" minLength={3} maxLength={32} required />
               </Field>
               <p className="-mt-2 text-xs text-muted-foreground">Only letters, numbers, dash, and underscore are allowed.</p>
               <Field label="Email">
