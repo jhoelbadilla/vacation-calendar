@@ -69,8 +69,7 @@ export function buildYearCalendar(year: number, settings: Settings, overrides: D
       const holidayReduction = publicHoliday ? baseWorkHours : 0;
       const unpaidReduction = unpaidDay ? unpaidHours : 0;
       const effectiveWorkHours = Math.max(0, baseWorkHours - holidayReduction - unpaidReduction);
-      const accrualEligibleHours =
-        personalDay || publicHoliday ? settings.standardWorkdayHours : vacationDay ? 0 : effectiveWorkHours;
+      const accrualEligibleHours = personalDay || publicHoliday ? settings.standardWorkdayHours : effectiveWorkHours;
       const dailyAccruedVacationHours = accrualEligibleHours * settings.vacationHoursPerWorkHour;
       const inProjection = dayDiff(dateKey, settings.currentVacationAsOfDate) > 0;
 

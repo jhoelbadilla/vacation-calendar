@@ -14,7 +14,11 @@ export function App() {
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState(currentYear);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+  const [multiDaySelectionEnabled, setMultiDaySelectionEnabled] = useState(false);
   const [showCreateProfile, setShowCreateProfile] = useState(false);
+  const [profileDeleteTarget, setProfileDeleteTarget] = useState<Profile | null>(null);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -51,14 +55,13 @@ export function App() {
     onSuccess: async () => {
       setActiveProfileId(null);
       setSelectedDate(null);
+      setProfileDeleteTarget(null);
       await queryClient.invalidateQueries({ queryKey: ["profiles"] });
     }
   });
 
   function confirmDeleteProfile() {
-    if (!activeProfile) return;
-    const ok = window.confirm(`Delete simulation profile "${activeProfile.name}"? This will remove its settings and calendar overrides.`);
-    if (ok) deleteProfile.mutate(activeProfile.id);
+    if (profileDeleteTarget) deleteProfile.mutate(profileDeleteTarget.id);
   }
 
   const months = useMemo(() => {
@@ -68,6 +71,10 @@ export function App() {
 
   const days = useMemo(() => flattenMonths(months), [months]);
   const selectedDay = days.find((day) => day.date === selectedDate) ?? null;
+  const selectedDays = useMemo(() => {
+    if (!rangeStart || !rangeEnd) return selectedDay ? [selectedDay] : [];
+    return days.filter((day) => day.date >= rangeStart && day.date <= rangeEnd && day.isSelectable);
+  }, [days, rangeEnd, rangeStart, selectedDay]);
   const today = new Date().toISOString().slice(0, 10);
   const todayDay = days.find((day) => day.date === today);
   const endOfYearDay = days.at(-1);
@@ -81,6 +88,41 @@ export function App() {
   }
 
   const noProfiles = profiles.isSuccess && profileList.length === 0;
+
+  function selectCalendarDay(day: (typeof days)[number]) {
+    setSelectedDate(day.date);
+
+    if (!multiDaySelectionEnabled) {
+      setRangeStart(day.date);
+      setRangeEnd(day.date);
+      return;
+    }
+
+    if (!rangeStart || (rangeStart && rangeEnd && rangeStart !== rangeEnd)) {
+      setRangeStart(day.date);
+      setRangeEnd(day.date);
+      return;
+    }
+
+    if (day.date === rangeStart) {
+      setRangeEnd(day.date);
+      return;
+    }
+
+    setRangeStart(day.date < rangeStart ? day.date : rangeStart);
+    setRangeEnd(day.date > rangeStart ? day.date : rangeStart);
+  }
+
+  function clearRange() {
+    setRangeStart(selectedDate);
+    setRangeEnd(selectedDate);
+  }
+
+  function toggleMultiDaySelection(enabled: boolean) {
+    setMultiDaySelectionEnabled(enabled);
+    setRangeStart(selectedDate);
+    setRangeEnd(selectedDate);
+  }
 
   return (
     <main className="min-h-screen px-3 py-4 md:px-6">
@@ -110,7 +152,7 @@ export function App() {
             <button
               title="Delete profile"
               className="rounded-md border border-border p-2 text-muted-foreground hover:text-destructive"
-              onClick={confirmDeleteProfile}
+              onClick={() => setProfileDeleteTarget(activeProfile)}
               disabled={deleteProfile.isPending}
             >
               <Trash2 size={18} />
@@ -165,7 +207,11 @@ export function App() {
               year={year}
               months={months}
               selectedDate={selectedDate}
-              onSelect={(day) => setSelectedDate(day.date)}
+              rangeStart={rangeStart}
+              rangeEnd={rangeEnd}
+              multiDaySelectionEnabled={multiDaySelectionEnabled}
+              onMultiDaySelectionChange={toggleMultiDaySelection}
+              onSelect={selectCalendarDay}
               onYearChange={setYear}
             />
           ) : (
@@ -176,7 +222,15 @@ export function App() {
 
           <div className="grid content-start gap-4">
             {yearData.data ? <SettingsPanel profileId={yearData.data.profile.id} settings={yearData.data.settings} /> : null}
-            {activeProfile ? <DateEditor profileId={activeProfile.id} day={selectedDay} /> : null}
+            {activeProfile && yearData.data ? (
+              <DateEditor
+                profileId={activeProfile.id}
+                day={selectedDay}
+                selectedDays={selectedDays}
+                standardWorkdayHours={yearData.data.settings.standardWorkdayHours}
+                onClearRange={clearRange}
+              />
+            ) : null}
           </div>
         </div>
       </div>
@@ -198,6 +252,32 @@ export function App() {
             setShowCreateProfile(false);
           }}
         />
+      ) : null}
+      {profileDeleteTarget ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/35 px-4 backdrop-blur-sm">
+          <section className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-panel">
+            <h2 className="text-xl font-semibold">Delete simulation profile?</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This will delete "{profileDeleteTarget.name}" and remove its settings and calendar overrides.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                className="h-10 rounded-md border border-border px-4 text-sm font-semibold"
+                onClick={() => setProfileDeleteTarget(null)}
+                disabled={deleteProfile.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                className="h-10 rounded-md bg-destructive px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50"
+                onClick={confirmDeleteProfile}
+                disabled={deleteProfile.isPending}
+              >
+                {deleteProfile.isPending ? "Deleting..." : "Delete profile"}
+              </button>
+            </div>
+          </section>
+        </div>
       ) : null}
     </main>
   );
