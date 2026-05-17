@@ -8,6 +8,8 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
     networks:
       - torrentnet
 
@@ -20,11 +22,14 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-vaccal}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vaccal}
       SESSION_SECRET: ${SESSION_SECRET}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://vaccal.jjhome.one}
       TRUST_PROXY: ${TRUST_PROXY:-true}
     depends_on:
       postgres:
         condition: service_healthy
+    ports:
+      - "${API_PORT:-3000}:3000"
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
@@ -42,6 +47,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vaccal} -d ${POSTGRES_DB:-vaccal}"]
       interval: 10s
