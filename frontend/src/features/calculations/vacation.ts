@@ -14,6 +14,8 @@ export type CalendarDay = {
   unpaidDay: boolean;
   unpaidHours: number;
   dailyAccruedVacationHours: number;
+  accruedVacationHoursToDate: number | null;
+  vacationHoursUsedToDate: number | null;
   runningVacationBalanceHours: number | null;
 };
 
@@ -24,7 +26,7 @@ export type MonthModel = {
   days: CalendarDay[];
 };
 
-const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long" });
+const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long", timeZone: "UTC" });
 
 export function formatHoursAndDays(hours: number, standardWorkdayHours: number) {
   const days = standardWorkdayHours > 0 ? hours / standardWorkdayHours : 0;
@@ -42,6 +44,8 @@ function dayDiff(left: string, right: string) {
 export function buildYearCalendar(year: number, settings: Settings, overrides: DayOverride[]): MonthModel[] {
   const overrideMap = new Map(overrides.map((override) => [override.date, override]));
   let running = settings.currentVacationHours;
+  let accruedToDate = 0;
+  let usedToDate = 0;
   const months: MonthModel[] = [];
 
   for (let month = 0; month < 12; month++) {
@@ -71,8 +75,12 @@ export function buildYearCalendar(year: number, settings: Settings, overrides: D
       const inProjection = dayDiff(dateKey, settings.currentVacationAsOfDate) > 0;
 
       if (inProjection) {
-        running += dailyAccruedVacationHours - (vacationDay ? vacationHours : 0);
+        accruedToDate += dailyAccruedVacationHours;
+        usedToDate += vacationDay ? vacationHours : 0;
+        running = settings.currentVacationHours + accruedToDate - usedToDate;
       }
+
+      const atOrAfterBaseline = dayDiff(dateKey, settings.currentVacationAsOfDate) >= 0;
 
       days.push({
         date: dateKey,
@@ -88,7 +96,9 @@ export function buildYearCalendar(year: number, settings: Settings, overrides: D
         unpaidDay,
         unpaidHours,
         dailyAccruedVacationHours,
-        runningVacationBalanceHours: dayDiff(dateKey, settings.currentVacationAsOfDate) >= 0 ? running : null
+        accruedVacationHoursToDate: atOrAfterBaseline ? accruedToDate : null,
+        vacationHoursUsedToDate: atOrAfterBaseline ? usedToDate : null,
+        runningVacationBalanceHours: atOrAfterBaseline ? running : null
       });
     }
 

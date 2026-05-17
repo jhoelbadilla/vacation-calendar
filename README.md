@@ -24,20 +24,32 @@ A React + Express + PostgreSQL vacation accrual simulator.
    cp .env.example .env
    ```
 
-3. Start PostgreSQL, then run migrations:
+3. Start the database and API containers, then run migrations:
 
    ```bash
-   npm run migrate
+   docker network inspect torrentnet || docker network create torrentnet
+   npm run build --workspace api
+   docker compose up -d --build postgres api
+   docker compose exec api npm run migrate
    ```
 
-4. Run the API and frontend in separate terminals:
+4. Run the frontend dev server:
 
    ```bash
-   npm run dev:api
    npm run dev:frontend
    ```
 
 The frontend dev server runs at `http://localhost:5173` and proxies `/api` to `http://localhost:3000`.
+The API container publishes `http://localhost:3000` for local frontend development.
+
+For local HTTP testing, keep these `.env` values:
+
+```bash
+CORS_ORIGIN=http://localhost:5173
+COOKIE_DOMAIN=
+COOKIE_SECURE=false
+TRUST_PROXY=false
+```
 
 ## Docker Deployment
 
@@ -53,6 +65,8 @@ Start the stack:
 docker compose up -d --build
 docker compose exec api npm run migrate
 ```
+
+For local browser testing without the Vite dev server, open `http://localhost:8080`.
 
 Route `https://vaccal.jjhome.one/` to the `frontend` service on port `80` and `/api/*` to the `api` service on port `3000`.
 

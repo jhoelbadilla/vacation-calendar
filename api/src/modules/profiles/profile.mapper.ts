@@ -1,3 +1,7 @@
+function toIsoDate(value: string | Date) {
+  return value instanceof Date ? value.toISOString().slice(0, 10) : value;
+}
+
 export function toProfile(row: any) {
   return {
     id: row.id,
@@ -11,7 +15,7 @@ export function toProfile(row: any) {
 export function toSettings(row: any) {
   return {
     currentVacationHours: Number(row.current_vacation_hours),
-    currentVacationAsOfDate: row.current_vacation_as_of_date,
+    currentVacationAsOfDate: toIsoDate(row.current_vacation_as_of_date),
     standardWorkdayHours: Number(row.standard_workday_hours),
     vacationHoursPerWorkHour: Number(row.vacation_hours_per_work_hour),
     weekendsEnabled: row.weekends_enabled
@@ -20,7 +24,7 @@ export function toSettings(row: any) {
 
 export function toOverride(row: any) {
   return {
-    date: row.calendar_date,
+    date: toIsoDate(row.calendar_date),
     workHours: row.work_hours === null ? null : Number(row.work_hours),
     vacationDay: row.vacation_day,
     vacationHours: Number(row.vacation_hours),

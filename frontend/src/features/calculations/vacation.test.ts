@@ -16,7 +16,15 @@ describe("buildYearCalendar", () => {
     const jan2 = days.find((day) => day.date === "2026-01-02");
 
     expect(jan2?.dailyAccruedVacationHours).toBe(0.75);
+    expect(jan2?.accruedVacationHoursToDate).toBe(0.75);
     expect(jan2?.runningVacationBalanceHours).toBe(10.75);
+  });
+
+  it("labels months in calendar order regardless of local timezone", () => {
+    const months = buildYearCalendar(2026, settings, []);
+
+    expect(months[0].label).toBe("January");
+    expect(months[11].label).toBe("December");
   });
 
   it("does not accrue on vacation days and subtracts vacation hours", () => {

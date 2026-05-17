@@ -7,7 +7,8 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "migrate": "tsx src/db/migrate.ts",
+    "migrate": "node dist/db/migrate.js",
+    "migrate:dev": "tsx src/db/migrate.ts",
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },

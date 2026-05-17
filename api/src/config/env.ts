@@ -9,6 +9,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1).default("postgres://vaccal:change-me@localhost:5432/vaccal"),
   SESSION_SECRET: z.string().min(24).default("development-session-secret-change-me"),
   COOKIE_DOMAIN: z.string().optional(),
+  COOKIE_SECURE: z.coerce.boolean().optional(),
   CORS_ORIGIN: z.string().default("http://localhost:5173"),
   TRUST_PROXY: z.coerce.boolean().default(false)
 });
