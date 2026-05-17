@@ -28,9 +28,9 @@ export function CalendarGrid({
           <ChevronRight size={18} />
         </button>
       </div>
-      <div className="calendar-scrollbar grid max-h-[calc(100vh-12rem)] gap-4 overflow-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
+      <div className="calendar-scrollbar grid max-h-[calc(100vh-12rem)] justify-center gap-4 overflow-auto pr-1 [grid-template-columns:repeat(auto-fit,minmax(18rem,18rem))]">
         {months.map((month) => (
-          <article key={month.month} className="rounded-lg border border-border bg-card p-3 shadow-sm">
+          <article key={month.month} className="w-72 rounded-lg border border-border bg-card p-3 shadow-sm">
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{month.label}</h3>
             <div className="grid grid-cols-7 gap-1 text-center text-[0.68rem] font-semibold text-muted-foreground">
               {weekDays.map((day, index) => (
@@ -58,7 +58,7 @@ export function CalendarGrid({
                 >
                   <span className="text-xs font-semibold">{day.dayOfMonth}</span>
                   <span className="mt-1 truncate text-[0.62rem] text-muted-foreground">
-                    {day.runningVacationBalanceHours === null ? "-" : `${day.runningVacationBalanceHours.toFixed(1)}h`}
+                    {day.accruedVacationHoursToDate === null ? "-" : `+${day.accruedVacationHoursToDate.toFixed(1)}h`}
                   </span>
                 </button>
               ))}

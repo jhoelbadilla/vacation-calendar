@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LogOut, Plus } from "lucide-react";
+import { LogOut, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AuthScreen } from "./components/auth/AuthScreen";
 import { CalendarGrid } from "./components/calendar/CalendarGrid";
@@ -46,6 +46,21 @@ export function App() {
     }
   });
 
+  const deleteProfile = useMutation({
+    mutationFn: (profileId: string) => api(`/profiles/${profileId}`, { method: "DELETE" }),
+    onSuccess: async () => {
+      setActiveProfileId(null);
+      setSelectedDate(null);
+      await queryClient.invalidateQueries({ queryKey: ["profiles"] });
+    }
+  });
+
+  function confirmDeleteProfile() {
+    if (!activeProfile) return;
+    const ok = window.confirm(`Delete simulation profile "${activeProfile.name}"? This will remove its settings and calendar overrides.`);
+    if (ok) deleteProfile.mutate(activeProfile.id);
+  }
+
   const months = useMemo(() => {
     if (!yearData.data) return [];
     return buildYearCalendar(year, yearData.data.settings, yearData.data.overrides);
@@ -91,6 +106,16 @@ export function App() {
           <button title="Create profile" className="rounded-md border border-border p-2" onClick={() => setShowCreateProfile(true)}>
             <Plus size={18} />
           </button>
+          {activeProfile ? (
+            <button
+              title="Delete profile"
+              className="rounded-md border border-border p-2 text-muted-foreground hover:text-destructive"
+              onClick={confirmDeleteProfile}
+              disabled={deleteProfile.isPending}
+            >
+              <Trash2 size={18} />
+            </button>
+          ) : null}
           <button title="Log out" className="rounded-md border border-border p-2" onClick={() => logout.mutate()}>
             <LogOut size={18} />
           </button>
@@ -108,7 +133,16 @@ export function App() {
               <p className="mt-1 text-xs text-muted-foreground">As of {yearData.data?.settings.currentVacationAsOfDate ?? "-"}</p>
             </section>
             <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Accrued As Of Today</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Accrued Since Balance Date</h2>
+              <p className="mt-3 text-2xl font-semibold">
+                {yearData.data && todayDay?.accruedVacationHoursToDate !== undefined && todayDay?.accruedVacationHoursToDate !== null
+                  ? formatHoursAndDays(todayDay.accruedVacationHoursToDate, yearData.data.settings.standardWorkdayHours)
+                  : "-"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Vacation hours earned after the configured balance date.</p>
+            </section>
+            <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Projected Balance Today</h2>
               <p className="mt-3 text-2xl font-semibold">
                 {yearData.data && todayDay?.runningVacationBalanceHours !== undefined && todayDay?.runningVacationBalanceHours !== null
                   ? formatHoursAndDays(todayDay.runningVacationBalanceHours, yearData.data.settings.standardWorkdayHours)
@@ -147,8 +181,24 @@ export function App() {
         </div>
       </div>
 
-      {noProfiles ? <CreateProfileModal required /> : null}
-      {showCreateProfile ? <CreateProfileModal required={false} /> : null}
+      {noProfiles ? (
+        <CreateProfileModal
+          required
+          onCreated={(profile) => {
+            setActiveProfileId(profile.id);
+          }}
+        />
+      ) : null}
+      {showCreateProfile ? (
+        <CreateProfileModal
+          required={false}
+          onCancel={() => setShowCreateProfile(false)}
+          onCreated={(profile) => {
+            setActiveProfileId(profile.id);
+            setShowCreateProfile(false);
+          }}
+        />
+      ) : null}
     </main>
   );
 }

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { pool } from "../../db/pool.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { isoDateSchema, profileSchema, settingsPatchSchema } from "../../shared/validation.js";
-import { toProfile, toSettings } from "./profile.mapper.js";
+import { toOverride, toProfile, toSettings } from "./profile.mapper.js";
 import { assertOwnedProfile } from "./profile.service.js";
 
 const router = Router();
@@ -72,9 +72,7 @@ router.patch("/:profileId", async (req, res, next) => {
 router.delete("/:profileId", async (req, res, next) => {
   try {
     await assertOwnedProfile(req.params.profileId, req.userId!);
-    await pool.query("update simulation_profiles set is_archived = true, updated_at = now() where id = $1", [
-      req.params.profileId
-    ]);
+    await pool.query("delete from simulation_profiles where id = $1", [req.params.profileId]);
     res.status(204).end();
   } catch (error) {
     next(error);
@@ -146,17 +144,7 @@ router.get("/:profileId/year/:year", async (req, res, next) => {
     res.json({
       profile: toProfile(profile),
       settings: toSettings(settings.rows[0]),
-      overrides: overrides.rows.map((row) => ({
-        date: row.calendar_date,
-        workHours: row.work_hours === null ? null : Number(row.work_hours),
-        vacationDay: row.vacation_day,
-        vacationHours: Number(row.vacation_hours),
-        personalDay: row.personal_day,
-        publicHoliday: row.public_holiday,
-        unpaidDay: row.unpaid_day,
-        unpaidHours: Number(row.unpaid_hours),
-        note: row.note ?? ""
-      }))
+      overrides: overrides.rows.map(toOverride)
     });
   } catch (error) {
     next(error);
