@@ -100,12 +100,13 @@ TRUST_PROXY=false
    docker compose exec api npm run migrate
    ```
 
-7. Point your reverse proxy to:
+7. Point your reverse proxy to the frontend container:
 
    ```text
-   vaccal.jjhome.one/      -> http://<server-ip>:8585
-   vaccal.jjhome.one/api/* -> http://<server-ip>:3333
+   vaccal.jjhome.one -> http://<server-ip>:8585
    ```
+
+   The frontend container proxies `/api/*` to the API service inside Docker. If you prefer to route API traffic directly in your reverse proxy, send `vaccal.jjhome.one/api/*` to `http://<server-ip>:3333`.
 
 8. Check service health:
 
@@ -129,7 +130,7 @@ docker compose exec api npm run migrate
 
 For local browser testing without the Vite dev server, open `http://localhost:8585`.
 
-Route `https://vaccal.jjhome.one/` to host port `8585` and `/api/*` to host port `3333`.
+Route `https://vaccal.jjhome.one/` to host port `8585`. The frontend nginx config forwards `/api/*` to the API container automatically.
 
 ## Verification
 

@@ -77,7 +77,7 @@ export function App() {
   }, [days, rangeEnd, rangeStart, selectedDay]);
   const today = new Date().toISOString().slice(0, 10);
   const todayDay = days.find((day) => day.date === today);
-  const endOfYearDay = days.at(-1);
+  const endOfYearDay = days.length ? days[days.length - 1] : undefined;
 
   if (me.isLoading) {
     return <main className="grid min-h-screen place-items-center text-sm text-muted-foreground">Loading workspace...</main>;
