@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildYearCalendar, flattenMonths } from "./vacation";
+import { buildCalendarTimeline, buildYearCalendar, flattenMonths } from "./vacation";
 import type { Settings } from "../../types/api";
 
 const settings: Settings = {
@@ -91,5 +91,14 @@ describe("buildYearCalendar", () => {
     const jan2 = days.find((day) => day.date === "2026-01-02");
     expect(jan2?.effectiveWorkHours).toBe(0);
     expect(jan2?.dailyAccruedVacationHours).toBe(0.75);
+  });
+
+  it("carries projected balances across years", () => {
+    const days = flattenMonths(buildCalendarTimeline(2026, 2027, settings, []));
+    const dec31 = days.find((day) => day.date === "2026-12-31");
+    const jan1 = days.find((day) => day.date === "2027-01-01");
+
+    expect(dec31?.runningVacationBalanceHours).toBe(205);
+    expect(jan1?.runningVacationBalanceHours).toBe(205.75);
   });
 });

@@ -168,7 +168,7 @@ export function DateEditor({
             type="checkbox"
             checked={form.vacationDay}
             onChange={(event) => updateVacationDay(event.currentTarget.checked)}
-            className="h-4 w-4 accent-teal-700"
+            className="h-4 w-4 accent-primary"
           />
           Vacation day
         </label>
@@ -190,7 +190,7 @@ export function DateEditor({
             checked={form.personalDay}
             disabled={form.vacationDay}
             onChange={(event) => update("personalDay", event.currentTarget.checked)}
-            className="h-4 w-4 accent-teal-700 disabled:opacity-50"
+            className="h-4 w-4 accent-primary disabled:opacity-50"
           />
           Personal day
         </label>
@@ -201,7 +201,7 @@ export function DateEditor({
             checked={form.publicHoliday}
             disabled={form.vacationDay}
             onChange={(event) => update("publicHoliday", event.currentTarget.checked)}
-            className="h-4 w-4 accent-teal-700 disabled:opacity-50"
+            className="h-4 w-4 accent-primary disabled:opacity-50"
           />
           Public holiday
         </label>
@@ -211,7 +211,7 @@ export function DateEditor({
             type="checkbox"
             checked={form.unpaidDay}
             onChange={(event) => update("unpaidDay", event.currentTarget.checked)}
-            className="h-4 w-4 accent-teal-700"
+            className="h-4 w-4 accent-primary"
           />
           Unpaid day
         </label>
